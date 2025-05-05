@@ -399,7 +399,7 @@ func listMatchingKeys(ctx context.Context, be backend.Backend, target backend.Pr
 		return
 	}
 	// more than one match
-	if target.PromptForSecretLine {
+	if filter != "" && target.PromptForSecretLine {
 		fmt.Println("Enter the number of the key to copy to clipboard")
 		var n int
 		_, err := fmt.Scan(&n)
