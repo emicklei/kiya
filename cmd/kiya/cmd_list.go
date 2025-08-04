@@ -59,9 +59,8 @@ func writeTable(keys []backend.Key, target *backend.Profile, filter string) {
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetAutoWrapText(false)
-	table.SetHeader([]string{"Copy to clipboard command", "Created", "Info"})
-	table.AppendBulk(data)
+	table.Header([]string{"Copy to clipboard command", "Created", "Info"})
+	table.Bulk(data)
 	table.Render() // writes to stdout
 }
 
