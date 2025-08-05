@@ -63,6 +63,7 @@ func (m *AWSSecretManager) Get(ctx context.Context, p *Profile, key string) ([]b
 	input := &secretsmanager.GetSecretValueInput{
 		SecretId: aws.String(key),
 	}
+	//Secrets Manager returns the AWSCURRENT version.
 	out, err := m.client.GetSecretValue(ctx, input)
 	if err != nil {
 		return nil, err
@@ -84,11 +85,17 @@ func (m *AWSSecretManager) List(ctx context.Context, p *Profile) (list []Key, er
 			return nil, err
 		}
 		for _, each := range out.SecretList {
-			list = append(list, Key{
+			key := Key{
 				Name:      *each.Name,
 				CreatedAt: *each.CreatedDate,
-				Info:      *each.Description,
-			})
+			}
+			if each.Description != nil {
+				key.Info = *each.Description
+			}
+			if each.OwningService != nil {
+				key.Owner = *each.OwningService
+			}
+			list = append(list, key)
 		}
 		done = out.NextToken == nil
 		nextToken = out.NextToken
@@ -98,6 +105,7 @@ func (m *AWSSecretManager) List(ctx context.Context, p *Profile) (list []Key, er
 
 // Put implements Backend.
 func (m *AWSSecretManager) Put(ctx context.Context, p *Profile, key string, value string, overwrite bool) error {
+	// https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/secretsmanager@v1.36.1#PutSecretValueInput
 	input := &secretsmanager.PutSecretValueInput{
 		SecretId:     aws.String(key),
 		SecretString: aws.String(value),
