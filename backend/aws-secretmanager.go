@@ -68,7 +68,7 @@ func (m *AWSSecretManager) Get(ctx context.Context, p *Profile, key string) ([]b
 	if err != nil {
 		return nil, err
 	}
-	return out.SecretBinary, nil
+	return []byte(*out.SecretString), nil
 }
 
 // List implements Backend.
