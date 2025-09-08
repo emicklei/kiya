@@ -12,6 +12,7 @@ require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/aws/aws-sdk-go-v2 v1.37.1
 	github.com/aws/aws-sdk-go-v2/config v1.30.2
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.61.1
 	github.com/emicklei/tre v1.7.0
 	github.com/olekukonko/tablewriter v1.0.9
