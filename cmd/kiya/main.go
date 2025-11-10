@@ -331,6 +331,8 @@ func main() {
 // getBackend returns a backend based on the profile
 func getBackend(ctx context.Context, p *backend.Profile) (backend.Backend, error) {
 	switch p.Backend {
+	case "asm":
+		return backend.NewAWSSecretManager(ctx, p)
 	case "ssm":
 		return backend.NewAWSParameterStore(ctx, p)
 	case "gsm":
@@ -362,12 +364,12 @@ func getBackend(ctx context.Context, p *backend.Profile) (backend.Backend, error
 	case "kms":
 		fallthrough
 	default:
-		// Create the KMS client
+		// Create the Google KMS client (must stay here for backwards compatibility)
 		kmsService, err := cloudkms.NewService(ctx, option.WithHTTPClient(kiya.NewAuthenticatedClient(*oAuthLocation)))
 		if err != nil {
 			log.Fatal(err)
 		}
-		// Create the Bucket client
+		// Create the Google Bucket client
 		storageService, err := cloudstore.NewClient(ctx)
 		if err != nil {
 			log.Fatalf("failed to create client [%v]", err)
@@ -405,7 +407,7 @@ func listMatchingKeys(ctx context.Context, be backend.Backend, target backend.Pr
 		return
 	}
 	// more than one match
-	if target.PromptForSecretLine {
+	if filter != "" && target.PromptForSecretLine {
 		fmt.Println("Enter the number of the key to copy to clipboard")
 		var n int
 		_, err := fmt.Scan(&n)
