@@ -32,6 +32,7 @@ type Profile struct {
 	CryptoKey           string
 	Bucket              string
 	VaultUrl            string
+	VaultMountPath      string
 	SecretRunes         []rune
 	AutoCopyEnabled     bool `json:"autoCopyEnabled"`     // if true then the secret of a single list result will be copied to clipboard
 	PromptForSecretLine bool `json:"promptForSecretLine"` // if true then you must enter a number to run the command on that line

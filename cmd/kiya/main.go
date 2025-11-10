@@ -351,6 +351,12 @@ func getBackend(ctx context.Context, p *backend.Profile) (backend.Backend, error
 			log.Fatalf("failed to create client [%v]", err)
 		}
 		return backend.NewAKV(client), nil
+	case "vault":
+		client, err := backend.NewVaultStore(ctx, p.VaultUrl)
+		if err != nil {
+			log.Fatalf("failed to create vault client, %s", err.Error())
+		}
+		return client, nil
 	case "file":
 		return backend.NewFileStore(p.Location, p.ProjectID), nil
 	case "kms":
