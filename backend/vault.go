@@ -16,8 +16,8 @@ type VaultStore struct {
 }
 
 func NewVaultStore(ctx context.Context, vaultUrl string) (*VaultStore, error) {
-	if len(vaultUrl) == 0 {
-		return nil, errors.New("a vault url must be present")
+	if vaultUrl == "" {
+		return nil, errors.New("a vault URL must be present")
 	}
 
 	client, err := vault.New(
@@ -80,6 +80,8 @@ func (v *VaultStore) List(ctx context.Context, p *Profile) ([]Key, error) {
 		keys = append(keys, Key{
 			Name:      keyName,
 			CreatedAt: secretMetadata.Data.CreatedTime,
+			Owner:     "<Unknown>",
+			Info:      "<Unknown>",
 		})
 	}
 
