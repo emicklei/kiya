@@ -18,7 +18,14 @@ type AWSSecretManager struct {
 // NewAWSSecretManager returns a new AWSSecretManager with an initialized AWS SSM client.
 func NewAWSSecretManager(ctx context.Context, p *Profile) (*AWSSecretManager, error) {
 	// Load the Shared AWS Configuration (~/.aws/config)
-	cfg, err := config.LoadDefaultConfig(ctx)
+	optFns := []func(*config.LoadOptions) error{}
+	if p.AWSProfile != "" {
+		optFns = append(optFns, config.WithSharedConfigProfile(p.AWSProfile))
+	}
+	if p.Location != "" {
+		optFns = append(optFns, config.WithRegion(p.Location))
+	}
+	cfg, err := config.LoadDefaultConfig(ctx, optFns...)
 	if err != nil {
 		return nil, err
 	}

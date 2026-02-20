@@ -24,15 +24,24 @@ type Key struct {
 
 // Profile describes a single profile in a .kiya configuration
 type Profile struct {
-	Backend             string
+	Backend string
+	// General
 	Label               string
-	ProjectID           string
 	Location            string
-	Keyring             string
-	CryptoKey           string
-	Bucket              string
-	VaultUrl            string
 	SecretRunes         []rune
 	AutoCopyEnabled     bool `json:"autoCopyEnabled"`     // if true then the secret of a single list result will be copied to clipboard
 	PromptForSecretLine bool `json:"promptForSecretLine"` // if true then you must enter a number to run the command on that line
+
+	// GCP
+	ProjectID string
+	Keyring   string
+	CryptoKey string
+	Bucket    string
+
+	// AWS
+	AWSProfile string `json:"awsprofile"`
+
+	// Vault
+	VaultUrl       string
+	VaultMountPath string
 }
