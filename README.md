@@ -97,7 +97,7 @@ If no value is defined for a profile's `backend`, `kms` will be used as a defaul
     "backend": "akv",
     "vaultUrl": "https://<vault-name>.vault.azure.net"
   },
-  "ag5": {
+  "teamF5-on-ssm": {
     "backend": "ssm",
     "location": "eu-central-1"
   }
@@ -208,7 +208,11 @@ For accessing OS environment values:
 
     kiya teamF1 move bitbucket.org/johndoe teamF2
 
+### Analyse all secrets by checking their strength (entropy)
 
+```shell
+kiya teamF2 analyse
+```
 
 ## Backup
 
