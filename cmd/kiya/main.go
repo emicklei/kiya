@@ -134,19 +134,7 @@ func main() {
 
 	case "copy":
 		key := flag.Arg(2)
-
-		if shouldPromptForPassword(b) {
-			pass := promptForPassword()
-			b.SetParameter("masterPassword", pass)
-		}
-
-		value, err := b.Get(ctx, &target, key)
-		if err != nil {
-			log.Fatal(tre.New(err, "get failed", "key", key, "err", err))
-		}
-		if err := clipboard.WriteAll(string(value)); err != nil {
-			log.Fatal(tre.New(err, "copy failed", "key", key, "err", err))
-		}
+		copySecretToClipboard(ctx, b, target, key)
 
 	case "get":
 		key := flag.Arg(2)
@@ -175,22 +163,24 @@ func main() {
 		commandDelete(ctx, b, &target, key)
 	case "list":
 		// kiya [profile] list [|filter-term]
-		filter := flag.Arg(2)
+		listMatchingKeys(ctx, b, target, flag.Arg(2))
 
-		keys := commandList(ctx, b, &target, filter)
-		writeTable(keys, &target, filter)
 	case "template":
 		commandTemplate(ctx, b, &target, *oOutputFilename)
 	case "move":
-		// kiya [source] move [source-key] [target] [|target-key]
+		if len(flag.Args()) < 4 {
+			fmt.Println("kiya [profile] move [source-key] [target-profile] [|target-key]")
+			os.Exit(0)
+		}
 		sourceProfile := kiya.Profiles[flag.Arg(0)]
 		sourceKey := flag.Arg(2)
 		targetProfile := kiya.Profiles[flag.Arg(3)]
-		targetKey := sourceKey
+		var targetKey string
 		if len(flag.Args()) == 5 {
 			targetKey = flag.Arg(4)
+		} else {
+			targetKey = sourceKey
 		}
-
 		if shouldPromptForPassword(b) {
 			pass := promptForPassword()
 			b.SetParameter("masterPassword", pass)
@@ -341,14 +331,15 @@ func main() {
 		commandAnalyse(ctx, b, &target)
 
 	default:
-		keys := commandList(ctx, b, &target, flag.Arg(1))
-		writeTable(keys, &target, flag.Arg(1))
+		listMatchingKeys(ctx, b, target, flag.Arg(1))
 	}
 }
 
 // getBackend returns a backend based on the profile
 func getBackend(ctx context.Context, p *backend.Profile) (backend.Backend, error) {
 	switch p.Backend {
+	case "asm":
+		return backend.NewAWSSecretManager(ctx, p)
 	case "ssm":
 		return backend.NewAWSParameterStore(ctx, p)
 	case "gsm":
@@ -369,22 +360,72 @@ func getBackend(ctx context.Context, p *backend.Profile) (backend.Backend, error
 			log.Fatalf("failed to create client [%v]", err)
 		}
 		return backend.NewAKV(client), nil
+	case "vault":
+		client, err := backend.NewVaultStore(ctx, p.VaultUrl)
+		if err != nil {
+			log.Fatalf("failed to create vault client, %s", err.Error())
+		}
+		return client, nil
 	case "file":
 		return backend.NewFileStore(p.Location, p.ProjectID), nil
 	case "kms":
 		fallthrough
 	default:
-		// Create the KMS client
+		// Create the Google KMS client (must stay here for backwards compatibility)
 		kmsService, err := cloudkms.NewService(ctx, option.WithHTTPClient(kiya.NewAuthenticatedClient(*oAuthLocation)))
 		if err != nil {
 			log.Fatal(err)
 		}
-		// Create the Bucket client
+		// Create the Google Bucket client
 		storageService, err := cloudstore.NewClient(ctx)
 		if err != nil {
 			log.Fatalf("failed to create client [%v]", err)
 		}
 
 		return backend.NewKMS(kmsService, storageService), nil
+	}
+}
+
+func copySecretToClipboard(ctx context.Context, be backend.Backend, target backend.Profile, key string) {
+	if shouldPromptForPassword(be) {
+		pass := promptForPassword()
+		be.SetParameter("masterPassword", pass)
+	}
+	value, err := be.Get(ctx, &target, key)
+	if err != nil {
+		log.Fatal(tre.New(err, "get failed", "key", key, "err", err))
+	}
+	if err := clipboard.WriteAll(string(value)); err != nil {
+		log.Fatal(tre.New(err, "copy failed", "key", key, "err", err))
+	}
+}
+
+func listMatchingKeys(ctx context.Context, be backend.Backend, target backend.Profile, filter string) {
+	keys := commandList(ctx, be, &target, filter)
+	writeTable(keys, &target, filter)
+	if len(keys) == 0 {
+		return
+	}
+	// if there is only one match and AutoCopy is enabled
+	// then copy the secret to clipboard
+	if len(keys) == 1 && target.AutoCopyEnabled {
+		copySecretToClipboard(ctx, be, target, keys[0].Name)
+		fmt.Printf("... copied secret [%s] to clipboard.\n", keys[0].Name)
+		return
+	}
+	// more than one match
+	if filter != "" && target.PromptForSecretLine {
+		fmt.Println("Enter the number of the key to copy to clipboard")
+		var n int
+		_, err := fmt.Scan(&n)
+		if err != nil {
+			return
+		}
+		if n < 1 || n > len(keys) {
+			fmt.Printf("No such line number %d\n", n)
+			return
+		}
+		copySecretToClipboard(ctx, be, target, keys[n-1].Name)
+		fmt.Printf("... copied secret [%s] to clipboard.\n", keys[n-1].Name)
 	}
 }

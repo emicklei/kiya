@@ -39,7 +39,7 @@ The bucket stores the encrypted secret value using the label as the storage key.
 #### AWS
 
 Kiya uses your AWS credentials to access the AWS Parameter Store (part of Systems Management).
-All values are stored using the specified encryption key ID or the default key set for your AWS Account.
+All values are stored using the specified encryption key ID or the default key set for your AWS Account. Kiya can also access the AWS Secrets Manager.
 
 #### AKV
 
@@ -64,9 +64,16 @@ Read `setup.md` for detailed instructions how to setup the basic prerequisites.
 ### Configuration
 
 Create a file name `.kiya` in your home directory with the content for a shareable secrets profile. You can have
-multiple profiles for different usages. Each profile should either mention `kms`, `gsm` or `ssm` to be used as the `backend`.
+multiple profiles for different usages. Each profile should either mention then backend.
+The following backends are supported:
+- `kms` - Google Key Management Service
+- `gsm` - Google Secret Manager
+- `ssm` - AWS Systems Management Parameter Store
+- `asm` - AWS Secrets Manager
+- `akv` - Azure Key Vault
+- `file` - File system
+ 
 If no value is defined for a profile's `backend`, `kms` will be used as a default available for GCP.
-Use the backend `ssm` if you are storing keys in AWS Parameter Store as part of the System Management services.
 
 ```json
 {
@@ -98,21 +105,27 @@ Use the backend `ssm` if you are storing keys in AWS Parameter Store as part of 
 
 ```
 
-#### GCP
+#### GCP Bucket (kms)
 
 You should define `location`, `keyring`, `cryptoKey` and `bucket` for KMS based profiles.
 For Google Secret Manager based profiles a `projectID` is sufficient.
 
-#### AWS
+#### GCP Secret Manager (gsm)
+
+TOWRITE
+
+#### AWS Parameter Store (ssm)
 
 You should define `location` for SSM (AWS Systems Management) based profiles ; its value is an AWS region.
 The `cryptoKey` is optional and must be set if you do not want to use the default key setup for your AWS Account.
 
-#### AKV
+#### AWS Secret Manager (asm)
+
+#### AKV (akv)
 
 You should define the `vaultUrl` for AKV (Azure Key Vault) based profiles ; its value is the URI used to identify a vault on Azure.
 
-#### File
+#### File (file)
 
 You should define `projectID` as it is used as a prefix for the file name.
 Optionally, you could provide `location` in order to store the file at a location of your choosing.
@@ -271,6 +284,14 @@ Public key copied to clipboard
 ```
 The public key has been copied to the clipboard, but you must put the private key in a safe place (
 e.g. print it out on paper and put it in a physical safe :)).
+
+#### Auto copy to clipboard
+
+The `list` (which is the default command if no command is given) command will show a table of matches based on the given command line argument. If that list contains a single match and your profile has `autoCopyEnabled` set to true then the secret will be copied to the clipboard automatically.
+
+### Prompt for command by line number
+
+The `list` (which is the default command if no command is given) command will show a table of matches based on the given command line argument. If your profile has `promptForSecretLine` set to true then each line has a number and the tool will prompt for the number to execute the line.
 
 ### Limitations
 
