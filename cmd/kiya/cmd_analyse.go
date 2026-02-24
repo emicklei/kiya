@@ -30,14 +30,8 @@ func commandAnalyse(ctx context.Context, b backend.Backend, target *backend.Prof
 		entropy := passwordvalidator.GetEntropy(string(v))
 		if entropy < 50 {
 			count++
-<<<<<<< HEAD
 			fmt.Printf("WARNING: kiya %s copy %s (entropy:%.2f length:%d)\n", target.Label, k, entropy, len(v))
 		}
-=======
-			fmt.Printf("WARNING: ")
-		}
-		fmt.Printf("kiya %s copy %s (entropy:%.2f length:%d)\n", target.Label, k, entropy, len(v))
->>>>>>> 328d896 (add analyse command to find weak secrets)
 	}
 	fmt.Printf("detected weak secrets [%d] in %v\n", count, time.Since(when))
 }
